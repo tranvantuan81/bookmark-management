@@ -37,6 +37,7 @@ func (e *engine) Start() error {
 	return e.app.Run(fmt.Sprintf(":%s", e.cfg.AppPort))
 }
 
+// ServeHTTP implements the http.Handler interface
 func (e *engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	e.app.ServeHTTP(w, req)
 }
@@ -44,13 +45,11 @@ func (e *engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 // initRoutes initializes the routes
 func (e *engine) initRoutes() {
 
-	cfg, _ := config.NewConfig()
-
 	// genpass handler
 	genPassSvc := service.NewGenPass()
 	genPassHandler := handler.NewGenPass(genPassSvc)
 
-	healthCheckSev := service.NewHealthCheck(cfg)
+	healthCheckSev := service.NewHealthCheck(e.cfg)
 	healthCheckHandler := handler.NewHealthCheck(healthCheckSev)
 
 	e.app.GET("/genpass", genPassHandler.GeneratePassword)

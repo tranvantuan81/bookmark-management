@@ -5,12 +5,14 @@ import (
 	"github.com/kelseyhightower/envconfig"
 )
 
+// Config struct
 type Config struct {
 	AppPort     string `default:"8080" envconfig:"APP_PORT"`
 	ServiceName string `default:"bookmark-management" envconfig:"SERVICE_NAME"`
 	InstanceID  string `default:"" envconfig:"INSTANCE_ID"`
 }
 
+// NewConfig creates a new config
 func NewConfig() (*Config, error) {
 	config := &Config{}
 
