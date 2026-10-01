@@ -26,7 +26,7 @@ func NewGenPass() GenPass {
 func (s *genPassService) GeneratePassword(length int) (string, error) {
 	password := make([]byte, length)
 
-	for i := 0; i < length; i++ {
+	for i := range length {
 		n, err := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
 		if err != nil {
 			return "", err

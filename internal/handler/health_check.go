@@ -23,9 +23,16 @@ func NewHealthCheck(healthCheckSvc service.HealthCheck) HealthCheck {
 	}
 }
 
-// HealthCheck checks the health of the service
+// HealthCheck Checks the health of the service
+// @Summary      Check health
+// @Description  Check health for app
+// @Tags         Health check
+// @Accept       application/json
+// @Produce      application/json
+// @Success      200  {object} 	map[string]string
+// @Router       /health-check [GET]
 func (s *healthCheckHandler) HealthCheck(c *gin.Context) {
-	res, err := s.healthCheckService.CheckHealth()
+	res, err := s.healthCheckService.HealthCheck(c)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
 		return

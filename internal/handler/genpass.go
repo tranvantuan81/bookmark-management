@@ -26,6 +26,13 @@ func NewGenPass(genPassSvc service.GenPass) GenPass {
 }
 
 // GeneratePassword generates a new password
+// @Summary      Generate random password
+// @Description  Generates a cryptographically secure random password of fixed length.
+// @Tags         password
+// @Produce      application/json
+// @Success      200  {object}  map[string]string "message"
+// @Failure      500  {object}  string "Internal Server Error"
+// @Router       /genpass [get]
 func (s *genPassHandler) GeneratePassword(c *gin.Context) {
 	pass, err := s.genPassService.GeneratePassword(passwordLength)
 	if err != nil {
