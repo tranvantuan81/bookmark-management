@@ -28,28 +28,26 @@ func NewShortenUrl(r repository.URLStorage, codeGen GenPass) ShortenUrl {
 
 // CreateShortenLink creates a new shorten link for the given URL
 func (s *shortenUrl) CreateShortenLink(ctx context.Context, url string, expTime int) (string, error) {
-	for {
-		// Generate code
-		code, err := s.codeGen.GeneratePassword(DefaultCodeLength)
-		if err != nil {
-			return "", err
-		}
-
-		// Check code exists in storage
-		value, err := s.r.GetURL(ctx, code)
-		if err != nil && !errors.Is(err, repository.ErrNotFound) {
-			return "", err
-		}
-
-		if value != "" {
-			continue
-		}
-
-		err = s.r.StoreURL(ctx, code, url, expTime)
-		if err != nil {
-			return "", err
-		}
-
-		return code, nil
+	// Generate code
+	code, err := s.codeGen.GeneratePassword(DefaultCodeLength)
+	if err != nil {
+		return "", err
 	}
+
+	// Check code exists in storage
+	value, err := s.r.GetURL(ctx, code)
+	if err != nil && !errors.Is(err, repository.ErrNotFound) {
+		return "", err
+	}
+
+	if value != "" {
+		return s.CreateShortenLink(ctx, url, expTime)
+	}
+
+	err = s.r.StoreURL(ctx, code, url, expTime)
+	if err != nil {
+		return "", err
+	}
+
+	return code, nil
 }

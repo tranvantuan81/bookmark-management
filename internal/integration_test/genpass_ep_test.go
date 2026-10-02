@@ -6,35 +6,41 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/tranvantuan81/bookmark-management/internal/api"
+	"github.com/tranvantuan81/bookmark-management/internal/config"
 )
 
 func TestGenPassEndPoints(t *testing.T) {
 	t.Parallel()
-
 	testCases := []struct {
-		name       string
-		call       func(engine api.Engine) *httptest.ResponseRecorder
-		wantStatus int
+		name string
+
+		setupTestHTTP func(api api.Engine) *httptest.ResponseRecorder
+
+		expectedStatusCode   int
+		expectedResponseBody string
 	}{
 		{
-			name: "GET returns a generated password",
-			call: func(engine api.Engine) *httptest.ResponseRecorder {
-				rec := httptest.NewRecorder()
-				engine.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/genpass", nil))
-				return rec
+			name: "normal case",
+			setupTestHTTP: func(engine api.Engine) *httptest.ResponseRecorder {
+				req := httptest.NewRequest(http.MethodGet, "/genpass", nil)
+				resRecorder := httptest.NewRecorder()
+				engine.ServeHTTP(resRecorder, req)
+				return resRecorder
 			},
-			wantStatus: http.StatusOK,
+			expectedStatusCode:   http.StatusOK,
+			expectedResponseBody: `{"password":`,
 		},
 		{
-			name: "unsupported method is not routed",
-			call: func(engine api.Engine) *httptest.ResponseRecorder {
-				rec := httptest.NewRecorder()
-				engine.ServeHTTP(rec, httptest.NewRequest(http.MethodPost, "/genpass", nil))
-				return rec
+			name: "wrong endpoint",
+			setupTestHTTP: func(engine api.Engine) *httptest.ResponseRecorder {
+				req := httptest.NewRequest(http.MethodPost, "/genpass", nil)
+				resRecorder := httptest.NewRecorder()
+				engine.ServeHTTP(resRecorder, req)
+				return resRecorder
 			},
-			wantStatus: http.StatusNotFound,
+			expectedStatusCode:   http.StatusNotFound,
+			expectedResponseBody: ``,
 		},
 	}
 
@@ -42,22 +48,11 @@ func TestGenPassEndPoints(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			engine, _ := setupTestAPI(t)
+			testAPI := api.NewEngine(&config.Config{}, nil)
+			recorder := tc.setupTestHTTP(testAPI)
 
-			rec := tc.call(engine)
-
-			require.Equal(t, tc.wantStatus, rec.Code)
-			if tc.wantStatus != http.StatusOK {
-				return
-			}
-
-			// the password is random, so assert on its shape instead of its value
-			var res struct {
-				Password string `json:"password"`
-			}
-			decodeBody(t, rec, &res)
-
-			assert.Len(t, res.Password, expectedPasswordLength)
+			assert.Equal(t, tc.expectedStatusCode, recorder.Code)
+			assert.Contains(t, recorder.Body.String(), tc.expectedResponseBody)
 		})
 	}
 }

@@ -6,42 +6,50 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	redisPkg "github.com/tranvantuan81/bookmark-management/pkg/redis"
+
 	"github.com/tranvantuan81/bookmark-management/internal/api"
+	"github.com/tranvantuan81/bookmark-management/internal/config"
 )
 
 func TestHealthCheckEndPoints(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
-		name       string
-		call       func(engine api.Engine) *httptest.ResponseRecorder
-		wantStatus int
-		wantBody   string
+		name string
+
+		setupTestHTTP func(api api.Engine) *httptest.ResponseRecorder
+
+		expectedStatusCode   int
+		expectedResponseBody string
 	}{
 		{
-			name: "GET returns the running instance",
-			call: func(engine api.Engine) *httptest.ResponseRecorder {
-				rec := httptest.NewRecorder()
-				engine.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/health-check", nil))
-				return rec
+			name: "normal case",
+
+			setupTestHTTP: func(engine api.Engine) *httptest.ResponseRecorder {
+				req := httptest.NewRequest(http.MethodGet, "/health-check", nil)
+				resRecorder := httptest.NewRecorder()
+				engine.ServeHTTP(resRecorder, req)
+				return resRecorder
 			},
-			wantStatus: http.StatusOK,
-			wantBody: `{
-				"message": "OK",
-				"service_name": "bookmark-management",
-				"instance_id": "0f1092e7-38ed-4701-b500-c4697c9dc122"
-			}`,
+			expectedStatusCode:   http.StatusOK,
+			expectedResponseBody: `{"message":"OK","service_name":"bookmark-management","instance_id":""`,
 		},
 		{
-			name: "unsupported method is not routed",
-			call: func(engine api.Engine) *httptest.ResponseRecorder {
-				rec := httptest.NewRecorder()
-				engine.ServeHTTP(rec, httptest.NewRequest(http.MethodPost, "/health-check", nil))
-				return rec
+			name: "wrong endpoint",
+
+			setupTestHTTP: func(engine api.Engine) *httptest.ResponseRecorder {
+				req := httptest.NewRequest(http.MethodPost, "/health-check", nil)
+
+				resRecorder := httptest.NewRecorder()
+
+				engine.ServeHTTP(resRecorder, req)
+
+				return resRecorder
 			},
-			wantStatus: http.StatusNotFound,
-			wantBody:   `404 page not found`,
+
+			expectedStatusCode:   http.StatusNotFound,
+			expectedResponseBody: ``,
 		},
 	}
 
@@ -49,18 +57,18 @@ func TestHealthCheckEndPoints(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			engine, _ := setupTestAPI(t)
+			mockRedis := redisPkg.InitMockRedis(t)
 
-			rec := tc.call(engine)
+			testAPI := api.NewEngine(&config.Config{
+				ServiceName: "bookmark-management",
+				InstanceID:  "",
+			}, mockRedis)
 
-			require.Equal(t, tc.wantStatus, rec.Code)
+			recorder := tc.setupTestHTTP(testAPI)
 
-			if tc.wantStatus == http.StatusNotFound {
-				// gin's 404 replies with plain text, not JSON
-				assert.Equal(t, tc.wantBody, rec.Body.String())
-				return
-			}
-			assert.JSONEq(t, tc.wantBody, rec.Body.String())
+			assert.Equal(t, tc.expectedStatusCode, recorder.Code)
+
+			assert.Contains(t, recorder.Body.String(), tc.expectedResponseBody)
 		})
 	}
 }

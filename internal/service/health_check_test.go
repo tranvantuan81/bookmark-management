@@ -1,72 +1,72 @@
-package service_test
+package service
 
 import (
+	"context"
 	"testing"
 
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/tranvantuan81/bookmark-management/internal/config"
 	"github.com/tranvantuan81/bookmark-management/internal/repository"
-	"github.com/tranvantuan81/bookmark-management/internal/service"
 	redisPkg "github.com/tranvantuan81/bookmark-management/pkg/redis"
 )
 
-func TestHealthCheck_Service(t *testing.T) {
+func TestHealthCheck(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
-		name       string
-		setUpRedis func(t *testing.T) *redis.Client
-		wantRes    service.Response
-		wantErr    error
+		name        string
+		cfg         *config.Config
+		setupMock   func(ctx context.Context) *redis.Client
+		expectedRes Response
+		expectedErr error
 	}{
 		{
-			name: "redis is reachable",
-			setUpRedis: func(t *testing.T) *redis.Client {
+			name: "success",
+			cfg: &config.Config{
+				ServiceName: "test",
+				InstanceID:  "xxx",
+			},
+			setupMock: func(ctx context.Context) *redis.Client {
 				return redisPkg.InitMockRedis(t)
 			},
-			wantRes: service.Response{
+			expectedRes: Response{
 				Message:     "OK",
-				ServiceName: "bookmark-management",
-				InstanceID:  "0f1092e7-38ed-4701-b500-c4697c9dc122",
+				ServiceName: "test",
+				InstanceID:  "xxx",
 			},
-			wantErr: nil,
+			expectedErr: nil,
 		},
 		{
-			name: "redis is unreachable",
-			setUpRedis: func(t *testing.T) *redis.Client {
-				client := redisPkg.InitMockRedis(t)
-				require.NoError(t, client.Close())
-				return client
+			name: "connection err",
+			cfg: &config.Config{
+				ServiceName: "test",
+				InstanceID:  "xxx",
 			},
-			wantRes: service.Response{},
-			wantErr: redis.ErrClosed,
+			setupMock: func(ctx context.Context) *redis.Client {
+				mockR := redisPkg.InitMockRedis(t)
+				mockR.Close()
+				return mockR
+			},
+			expectedErr: redis.ErrClosed,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-
 			ctx := t.Context()
 
-			cfg := &config.Config{
-				ServiceName: "bookmark-management",
-				InstanceID:  "0f1092e7-38ed-4701-b500-c4697c9dc122",
-			}
+			redisClient := tc.setupMock(ctx)
 
-			ping := repository.NewPing(tc.setUpRedis(t))
-			svc := service.NewHealthCheck(cfg, ping)
+			ping := repository.NewPing(redisClient)
 
-			res, err := svc.HealthCheck(ctx)
+			healthCheckSev := NewHealthCheck(tc.cfg, ping)
 
-			if tc.wantErr != nil {
-				require.ErrorIs(t, err, tc.wantErr)
-			} else {
-				require.NoError(t, err)
-			}
-			assert.Equal(t, tc.wantRes, res)
+			res, err := healthCheckSev.HealthCheck(ctx)
+
+			assert.Equal(t, tc.expectedRes, res)
+			assert.ErrorIs(t, err, tc.expectedErr)
 		})
 	}
 }
