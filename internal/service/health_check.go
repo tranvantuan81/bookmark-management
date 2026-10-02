@@ -1,21 +1,29 @@
 package service
 
-import "github.com/tranvantuan81/bookmark-management/internal/config"
+import (
+	"context"
 
-// HealthCheck interface for health check service
+	"github.com/tranvantuan81/bookmark-management/internal/config"
+	"github.com/tranvantuan81/bookmark-management/internal/repository"
+)
+
+// CheckHealth interface for health check service
+//
 //go:generate mockery --name=HealthCheck --filename=health_check.go
 type HealthCheck interface {
-	CheckHealth() (Response, error)
+	HealthCheck(ctx context.Context) (Response, error)
 }
 
 type healthCheckService struct {
-	cfg *config.Config
+	cfg  *config.Config
+	ping repository.Ping
 }
 
 // NewHealthCheck creates a new health check service
-func NewHealthCheck(cfg *config.Config) HealthCheck {
+func NewHealthCheck(cfg *config.Config, ping repository.Ping) HealthCheck {
 	return &healthCheckService{
-		cfg: cfg,
+		cfg:  cfg,
+		ping: ping,
 	}
 }
 
@@ -26,10 +34,15 @@ type Response struct {
 	InstanceID  string `json:"instance_id"`
 }
 
-// CheckHealth checks the health of the service
-func (s *healthCheckService) CheckHealth() (Response, error) {
+// HealthCheck checks the health of the service
+func (s *healthCheckService) HealthCheck(ctx context.Context) (Response, error) {
 	// load config
 	//cfg, _ := config.NewConfig()
+
+	err := s.ping.Ping(ctx)
+	if err != nil {
+		return Response{}, err
+	}
 
 	return Response{
 		Message:     "OK",

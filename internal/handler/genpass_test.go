@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"context"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -9,48 +8,41 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/tranvantuan81/bookmark-management/internal/service/mocks"
 )
 
-var testErr = errors.New("test error")
+// errSomething is a sentinel error used by the service mocks.
+var errSomething = errors.New("something went wrong")
 
 func TestGenPassHandler_GeneratePassword(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
-		name string
-
-		setupRequest     func(ctx *gin.Context)
-		setupMockService func(ctx context.Context) *mocks.GenPass
-
-		expectedStatus   int
-		expectedResponse string
+		name       string
+		setUpSvc   func(t *testing.T) *mocks.GenPass
+		wantStatus int
+		wantBody   string
 	}{
 		{
-			name: "success",
-			setupRequest: func(ctx *gin.Context) {
-				ctx.Request = httptest.NewRequest(http.MethodGet, "/genpass", nil)
+			name: "service returns a password",
+			setUpSvc: func(t *testing.T) *mocks.GenPass {
+				svcMock := mocks.NewGenPass(t)
+				svcMock.On("GeneratePassword", passwordLength).Return("123456789012", nil).Once()
+				return svcMock
 			},
-			setupMockService: func(ctx context.Context) *mocks.GenPass {
-				serviceMock := mocks.NewGenPass(t)
-				serviceMock.On("GeneratePassword", passwordLength).Return("123456789012", nil)
-				return serviceMock
-			},
-			expectedStatus:   http.StatusOK,
-			expectedResponse: `{"password":"123456789012"}`,
+			wantStatus: http.StatusOK,
+			wantBody:   `{"password":"123456789012"}`,
 		},
 		{
-			name: "service failed",
-			setupRequest: func(ctx *gin.Context) {
-				ctx.Request = httptest.NewRequest(http.MethodGet, "/genpass", nil)
+			name: "service returns an error",
+			setUpSvc: func(t *testing.T) *mocks.GenPass {
+				svcMock := mocks.NewGenPass(t)
+				svcMock.On("GeneratePassword", passwordLength).Return("", errSomething).Once()
+				return svcMock
 			},
-			setupMockService: func(ctx context.Context) *mocks.GenPass {
-				serviceMock := mocks.NewGenPass(t)
-				serviceMock.On("GeneratePassword", passwordLength).Return("", testErr)
-				return serviceMock
-			},
-			expectedStatus:   http.StatusInternalServerError,
-			expectedResponse: `{"error":"Internal Server Error"}`,
+			wantStatus: http.StatusInternalServerError,
+			wantBody:   `{"error":"Internal Server Error"}`,
 		},
 	}
 
@@ -60,16 +52,14 @@ func TestGenPassHandler_GeneratePassword(t *testing.T) {
 
 			rec := httptest.NewRecorder()
 			ctx, _ := gin.CreateTestContext(rec)
-			tc.setupRequest(ctx)
+			ctx.Request = httptest.NewRequest(http.MethodGet, "/genpass", nil)
 
-			mockSvc := tc.setupMockService(ctx)
-			testHandler := NewGenPass(mockSvc)
+			handler := NewGenPass(tc.setUpSvc(t))
 
-			testHandler.GeneratePassword(ctx)
+			handler.GeneratePassword(ctx)
 
-			assert.Equal(t, tc.expectedStatus, rec.Code)
-			assert.Equal(t, tc.expectedResponse, rec.Body.String())
-
+			require.Equal(t, tc.wantStatus, rec.Code)
+			assert.JSONEq(t, tc.wantBody, rec.Body.String())
 		})
 	}
 }

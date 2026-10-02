@@ -1,0 +1,76 @@
+basePath: /
+definitions:
+  handler.shortenLinkInput:
+    properties:
+      exp:
+        type: integer
+      url:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: API for managing bookmark.
+  title: Bookmark Management API
+  version: "1.0"
+paths:
+  /genpass:
+    get:
+      description: Generates a cryptographically secure random password of fixed length.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: message
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Generate random password
+      tags:
+      - password
+  /health-check:
+    get:
+      consumes:
+      - application/json
+      description: Check health for app
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Check health
+      tags:
+      - Health check
+  /v1/links/shorten:
+    post:
+      consumes:
+      - application/json
+      description: Generate shorten url based on original url that last upto 7 days
+      parameters:
+      - description: Input required
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handler.shortenLinkInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Generate shorten url based on original url that last upto 7 days
+      tags:
+      - link
+swagger: "2.0"
