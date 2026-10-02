@@ -8,7 +8,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/tranvantuan81/bookmark-management/internal/service/mocks"
 )
@@ -19,16 +18,16 @@ func TestShortenLinkHandler_CreateShortenLink(t *testing.T) {
 	testCases := []struct {
 		name        string
 		requestBody string
-		setUpSvc    func(t *testing.T) *mocks.ShortenUrl
+		setUpSvc    func(t *testing.T, ctx *gin.Context) *mocks.ShortenUrl
 		wantStatus  int
 		wantBody    string
 	}{
 		{
 			name:        "valid payload returns the generated code",
 			requestBody: `{"url":"https://google.com","exp":3600}`,
-			setUpSvc: func(t *testing.T) *mocks.ShortenUrl {
+			setUpSvc: func(t *testing.T, ctx *gin.Context) *mocks.ShortenUrl {
 				svcMock := mocks.NewShortenUrl(t)
-				svcMock.On("CreateShortenLink", mock.Anything, "https://google.com", 3600).
+				svcMock.On("CreateShortenLink", ctx, "https://google.com", 3600).
 					Return("abcdefg", nil).Once()
 				return svcMock
 			},
@@ -41,10 +40,8 @@ func TestShortenLinkHandler_CreateShortenLink(t *testing.T) {
 		{
 			name:        "malformed payload is rejected before the service is called",
 			requestBody: `{"url":`,
-			setUpSvc: func(t *testing.T) *mocks.ShortenUrl {
-				svcMock := mocks.NewShortenUrl(t)
-				svcMock.AssertNotCalled(t, "CreateShortenLink", mock.Anything, mock.Anything, mock.Anything)
-				return svcMock
+			setUpSvc: func(t *testing.T, ctx *gin.Context) *mocks.ShortenUrl {
+				return mocks.NewShortenUrl(t)
 			},
 			wantStatus: http.StatusBadRequest,
 			wantBody:   `{"error":"Invalid input"}`,
@@ -52,9 +49,9 @@ func TestShortenLinkHandler_CreateShortenLink(t *testing.T) {
 		{
 			name:        "service returns an error",
 			requestBody: `{"url":"https://google.com","exp":3600}`,
-			setUpSvc: func(t *testing.T) *mocks.ShortenUrl {
+			setUpSvc: func(t *testing.T, ctx *gin.Context) *mocks.ShortenUrl {
 				svcMock := mocks.NewShortenUrl(t)
-				svcMock.On("CreateShortenLink", mock.Anything, "https://google.com", 3600).
+				svcMock.On("CreateShortenLink", ctx, "https://google.com", 3600).
 					Return("", errSomething).Once()
 				return svcMock
 			},
@@ -76,7 +73,7 @@ func TestShortenLinkHandler_CreateShortenLink(t *testing.T) {
 			)
 			ctx.Request.Header.Set("Content-Type", "application/json")
 
-			handler := NewShortenLink(tc.setUpSvc(t))
+			handler := NewShortenLink(tc.setUpSvc(t, ctx))
 
 			handler.CreateShortenLink(ctx)
 

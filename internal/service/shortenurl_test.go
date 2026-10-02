@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/tranvantuan81/bookmark-management/internal/repository"
 	repoMocks "github.com/tranvantuan81/bookmark-management/internal/repository/mocks"
@@ -23,7 +22,6 @@ func TestShortenUrl_CreateShortenLink(t *testing.T) {
 	testCases := []struct {
 		name       string
 		setUpMocks func(t *testing.T, ctx context.Context) (*repoMocks.URLStorage, *svcMocks.GenPass)
-		verifyFunc func(t *testing.T, r *repoMocks.URLStorage)
 		wantCode   string
 		wantErr    error
 	}{
@@ -83,9 +81,6 @@ func TestShortenUrl_CreateShortenLink(t *testing.T) {
 
 				return mockRepo, mockCodeGen
 			},
-			verifyFunc: func(t *testing.T, r *repoMocks.URLStorage) {
-				r.AssertNotCalled(t, "StoreURL", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
-			},
 			wantCode: "",
 			wantErr:  errSomething,
 		},
@@ -125,10 +120,6 @@ func TestShortenUrl_CreateShortenLink(t *testing.T) {
 			}
 
 			assert.Equal(t, tc.wantCode, code)
-
-			if tc.verifyFunc != nil {
-				tc.verifyFunc(t, mockRepo)
-			}
 		})
 	}
 }

@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -52,7 +51,7 @@ func (s *shortenLink) CreateShortenLink(c *gin.Context) {
 	}
 
 	// goi service
-	key, err := s.svc.CreateShortenLink(context.Background(), input.Url, input.Exp)
+	key, err := s.svc.CreateShortenLink(c, input.Url, input.Exp)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
 		return
