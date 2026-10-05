@@ -52,20 +52,16 @@ func (e *engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 // initRoutes initializes the routes
 func (e *engine) initRoutes() {
 
-	// genpass handler
-	genPassSvc := service.NewGenPass()
-	genPassHandler := handler.NewGenPass(genPassSvc)
-
 	healthCheckRepo := repository.NewPing(e.redisClient)
 	healthCheckSev := service.NewHealthCheck(e.cfg, healthCheckRepo)
 	healthCheckHandler := handler.NewHealthCheck(healthCheckSev)
 
 	urlStorage := repository.NewURLStorage(e.redisClient)
-	urlService := service.NewShortenUrl(urlStorage, genPassSvc)
+	urlService := service.NewShortenUrl(urlStorage)
 	urlHandler := handler.NewShortenLink(urlService)
 
 	e.app.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	e.app.GET("/genpass", genPassHandler.GeneratePassword)
 	e.app.GET("/health-check", healthCheckHandler.HealthCheck)
 	e.app.POST("/v1/links/shorten", urlHandler.CreateShortenLink)
+	e.app.GET("/v1/links/redirect/:code", urlHandler.Redirect)
 }

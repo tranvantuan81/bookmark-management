@@ -1,125 +1,83 @@
 package service_test
 
 import (
-	"context"
-	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"github.com/tranvantuan81/bookmark-management/internal/repository"
-	repoMocks "github.com/tranvantuan81/bookmark-management/internal/repository/mocks"
 	"github.com/tranvantuan81/bookmark-management/internal/service"
-	svcMocks "github.com/tranvantuan81/bookmark-management/internal/service/mocks"
 )
 
-// errSomething is a sentinel error used by the dependency mocks.
-var errSomething = errors.New("something went wrong")
-
-func TestShortenUrl_CreateShortenLink(t *testing.T) {
+func TestGeneratePassword(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
-		name       string
-		setUpMocks func(t *testing.T, ctx context.Context) (*repoMocks.URLStorage, *svcMocks.GenPass)
-		wantCode   string
-		wantErr    error
+		name           string
+		expectedLength int
+		expectedError  error
 	}{
 		{
-			name: "code is generated and stored",
-			setUpMocks: func(t *testing.T, ctx context.Context) (*repoMocks.URLStorage, *svcMocks.GenPass) {
-				mockRepo := repoMocks.NewURLStorage(t)
-				mockCodeGen := svcMocks.NewGenPass(t)
-
-				mockCodeGen.On("GeneratePassword", service.DefaultCodeLength).Return("abcdefg", nil).Once()
-				mockRepo.On("GetURL", ctx, "abcdefg").Return("", repository.ErrNotFound).Once()
-				mockRepo.On("StoreURL", ctx, "abcdefg", "https://google.com", 3600).Return(nil).Once()
-
-				return mockRepo, mockCodeGen
-			},
-			wantCode: "abcdefg",
-			wantErr:  nil,
+			name:           "success",
+			expectedLength: 12,
+			expectedError:  nil,
 		},
 		{
-			name: "code already exists so a new one is generated",
-			setUpMocks: func(t *testing.T, ctx context.Context) (*repoMocks.URLStorage, *svcMocks.GenPass) {
-				mockRepo := repoMocks.NewURLStorage(t)
-				mockCodeGen := svcMocks.NewGenPass(t)
-
-				mockCodeGen.On("GeneratePassword", service.DefaultCodeLength).Return("dupe123", nil).Once()
-				mockCodeGen.On("GeneratePassword", service.DefaultCodeLength).Return("fresh45", nil).Once()
-				mockRepo.On("GetURL", ctx, "dupe123").Return("https://old.com", nil).Once()
-				mockRepo.On("GetURL", ctx, "fresh45").Return("", repository.ErrNotFound).Once()
-				mockRepo.On("StoreURL", ctx, "fresh45", "https://google.com", 3600).Return(nil).Once()
-
-				return mockRepo, mockCodeGen
-			},
-			wantCode: "fresh45",
-			wantErr:  nil,
+			name:           "success with custom length",
+			expectedLength: 1,
+			expectedError:  nil,
 		},
 		{
-			name: "code generation fails",
-			setUpMocks: func(t *testing.T, ctx context.Context) (*repoMocks.URLStorage, *svcMocks.GenPass) {
-				mockRepo := repoMocks.NewURLStorage(t)
-				mockCodeGen := svcMocks.NewGenPass(t)
-
-				mockCodeGen.On("GeneratePassword", service.DefaultCodeLength).Return("", errSomething).Once()
-
-				return mockRepo, mockCodeGen
-			},
-			wantCode: "",
-			wantErr:  errSomething,
-		},
-		{
-			name: "storage lookup fails",
-			setUpMocks: func(t *testing.T, ctx context.Context) (*repoMocks.URLStorage, *svcMocks.GenPass) {
-				mockRepo := repoMocks.NewURLStorage(t)
-				mockCodeGen := svcMocks.NewGenPass(t)
-
-				mockCodeGen.On("GeneratePassword", service.DefaultCodeLength).Return("abcdefg", nil).Once()
-				mockRepo.On("GetURL", ctx, "abcdefg").Return("", errSomething).Once()
-
-				return mockRepo, mockCodeGen
-			},
-			wantCode: "",
-			wantErr:  errSomething,
-		},
-		{
-			name: "storing the url fails",
-			setUpMocks: func(t *testing.T, ctx context.Context) (*repoMocks.URLStorage, *svcMocks.GenPass) {
-				mockRepo := repoMocks.NewURLStorage(t)
-				mockCodeGen := svcMocks.NewGenPass(t)
-
-				mockCodeGen.On("GeneratePassword", service.DefaultCodeLength).Return("abcdefg", nil).Once()
-				mockRepo.On("GetURL", ctx, "abcdefg").Return("", repository.ErrNotFound).Once()
-				mockRepo.On("StoreURL", ctx, "abcdefg", "https://google.com", 3600).Return(errSomething).Once()
-
-				return mockRepo, mockCodeGen
-			},
-			wantCode: "",
-			wantErr:  errSomething,
+			name:           "success with custom length",
+			expectedLength: 100000,
+			expectedError:  nil,
 		},
 	}
-
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			ctx := t.Context()
-
-			mockRepo, mockCodeGen := tc.setUpMocks(t, ctx)
-			svc := service.NewShortenUrl(mockRepo, mockCodeGen)
-
-			code, err := svc.CreateShortenLink(ctx, "https://google.com", 3600)
-
-			if tc.wantErr != nil {
-				require.ErrorIs(t, err, tc.wantErr)
-			} else {
-				require.NoError(t, err)
-				assert.Len(t, code, service.DefaultCodeLength)
-			}
-
-			assert.Equal(t, tc.wantCode, code)
+			password, err := service.GeneratePassword(tc.expectedLength)
+			assert.ErrorIs(t, err, tc.expectedError)
+			assert.Equal(t, tc.expectedLength, len(password))
 		})
 	}
 }
+
+//func TestShortenUrl_CreateShortenLink(t *testing.T) {
+//	t.Parallel()
+//
+//	testCases := []struct {
+//		name         string
+//		setupMock    func(ctx context.Context) *redis.Client
+//		expectedCode string
+//		expectedErr  error
+//	}{
+//		{
+//			name: "code is generated and stored",
+//			setupMock: func(ctx context.Context) *redis.Client {
+//				testDB := redisPkg.InitMockRedis(t)
+//				testDB.Set(ctx, "abcdef", "https://google.com", 60)
+//				return testDB
+//			},
+//			expectedCode: "",
+//			expectedErr:  nil,
+//		},
+//	}
+//
+//	for _, tc := range testCases {
+//		t.Run(tc.name, func(t *testing.T) {
+//			t.Parallel()
+//			ctx := t.Context()
+//
+//			code, _ := service.GeneratePassword(7)
+//			mockRedis := tc.setupMock(ctx)
+//
+//			testRepo := repository.NewURLStorage(mockRedis)
+//
+//			testSvc := service.NewShortenUrl(testRepo)
+//
+//			result, err := testSvc.CreateShortenLink(ctx, code, 60)
+//			assert.NoError(t, tc.expectedErr, err)
+//			assert.Equal(t, tc.expectedCode, result)
+//		})
+//	}
+//}

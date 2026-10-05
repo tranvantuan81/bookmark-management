@@ -13,13 +13,13 @@ import (
 // ErrNotFound is returned when the requested key does not exist in the storage.
 // It lets upper layers handle a missing key without depending on the
 // underlying storage implementation.
-var ErrNotFound = errors.New("url not found")
+var ErrNotFound = errors.New("value not found")
 
 // URLStorage is the interface for the URL storage repository
 //
 //go:generate mockery --name=URLStorage --filename=urlstorage.go
 type URLStorage interface {
-	StoreURL(ctx context.Context, key, url string, expTime int) error
+	StoreURL(ctx context.Context, key, url string, expTime int64) error
 	GetURL(ctx context.Context, key string) (string, error)
 }
 
@@ -33,7 +33,7 @@ func NewURLStorage(c *redis.Client) URLStorage {
 }
 
 // StoreURL stores a URL in the storage
-func (u *urlStorage) StoreURL(ctx context.Context, key, url string, expTime int) error {
+func (u *urlStorage) StoreURL(ctx context.Context, key, url string, expTime int64) error {
 	return u.c.Set(ctx, key, url, time.Duration(expTime)*time.Second).Err()
 }
 

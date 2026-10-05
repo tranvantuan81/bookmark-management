@@ -14,7 +14,7 @@ type ShortenUrl struct {
 }
 
 // CreateShortenLink provides a mock function with given fields: ctx, url, expTime
-func (_m *ShortenUrl) CreateShortenLink(ctx context.Context, url string, expTime int) (string, error) {
+func (_m *ShortenUrl) CreateShortenLink(ctx context.Context, url string, expTime int64) (string, error) {
 	ret := _m.Called(ctx, url, expTime)
 
 	if len(ret) == 0 {
@@ -23,17 +23,45 @@ func (_m *ShortenUrl) CreateShortenLink(ctx context.Context, url string, expTime
 
 	var r0 string
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, int) (string, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, int64) (string, error)); ok {
 		return rf(ctx, url, expTime)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, int) string); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, int64) string); ok {
 		r0 = rf(ctx, url, expTime)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string, int) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, string, int64) error); ok {
 		r1 = rf(ctx, url, expTime)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetURLFromCode provides a mock function with given fields: ctx, code
+func (_m *ShortenUrl) GetURLFromCode(ctx context.Context, code string) (string, error) {
+	ret := _m.Called(ctx, code)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetURLFromCode")
+	}
+
+	var r0 string
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (string, error)); ok {
+		return rf(ctx, code)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) string); ok {
+		r0 = rf(ctx, code)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, code)
 	} else {
 		r1 = ret.Error(1)
 	}

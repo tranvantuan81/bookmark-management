@@ -7,8 +7,6 @@ swagger:
 	swag init -g cmd/api/main.go
 
 COVERAGE_EXCLUDE=mocks|main.go|test|docs
-
-COVERAGE_EXCLUDE=mocks|main.go|test
 COVERAGE_THRESHOLD = 80
 
 test:
@@ -24,5 +22,9 @@ test:
 	fi
 
 dev-run: swagger run
+
+docker-build:
+	docker build -t bookmark_service:latest .
+
 
 

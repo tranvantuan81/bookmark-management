@@ -59,5 +59,46 @@ func TestUrlStorage_StoreURL(t *testing.T) {
 			}
 		})
 	}
+}
 
+func TestUrlStorage_GetURL(t *testing.T) {
+	t.Parallel()
+	testCases := []struct {
+		name      string
+		setupMock func(ctx context.Context) *redis.Client
+
+		expectedErr error
+		expectedUrl string
+	}{
+		{
+			name: "normal case",
+			setupMock: func(ctx context.Context) *redis.Client {
+				testDB := redisPkg.InitMockRedis(t)
+				testDB.Set(ctx, "abcdef", "https://google.com", 60)
+				return testDB
+			},
+			expectedErr: nil,
+			expectedUrl: "https://google.com",
+		},
+		{
+			name: "case key == nil",
+			setupMock: func(ctx context.Context) *redis.Client {
+				testDB := redisPkg.InitMockRedis(t)
+				return testDB
+			},
+			expectedErr: ErrNotFound,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			ctx := t.Context()
+			mock := tc.setupMock(ctx)
+
+			testRepo := NewURLStorage(mock)
+			url, err := testRepo.GetURL(ctx, "abcdef")
+			assert.ErrorIs(t, tc.expectedErr, err)
+			assert.Equal(t, tc.expectedUrl, url)
+		})
+	}
 }

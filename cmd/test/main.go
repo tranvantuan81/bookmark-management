@@ -1,31 +1,13 @@
 package main
 
 import (
-	"context"
-
-	"github.com/tranvantuan81/bookmark-management/internal/repository"
-	"github.com/tranvantuan81/bookmark-management/pkg/redis"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 func main() {
-	rClient, err := redis.NewClient("")
-	if err != nil {
-		panic(err)
-	}
-
-	ctx := context.Background()
-
-	urlStorage := repository.NewURLStorage(rClient)
-
-	err = urlStorage.StoreURL(ctx, "abcdef", "https://google.com", 0)
-	if err != nil {
-		return
-	}
-
-	url, err := urlStorage.GetURL(ctx, "abcdef")
-	if err != nil {
-		panic(err)
-	}
-
-	println(url)
+	zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+	log.Debug().Msg("Hello World debug")
+	log.Info().Msg("Hello World info")
+	log.Error().Msg("Hello World error")
 }

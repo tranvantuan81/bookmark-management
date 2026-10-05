@@ -4,12 +4,14 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 	"github.com/tranvantuan81/bookmark-management/internal/service"
 )
 
 // ShortenLink interface for shorten link handler
 type ShortenLink interface {
 	CreateShortenLink(ctx *gin.Context)
+	Redirect(c *gin.Context)
 }
 
 type shortenLink struct {
@@ -24,8 +26,8 @@ func NewShortenLink(svc service.ShortenUrl) ShortenLink {
 }
 
 type shortenLinkInput struct {
-	Url string `json:"url"`
-	Exp int    `json:"exp"`
+	Url string `json:"url" binding:"required,url"`
+	Exp int64  `json:"exp" binding:"required,lte=604800"`
 }
 
 type shortenLinkRes struct {
@@ -53,10 +55,36 @@ func (s *shortenLink) CreateShortenLink(c *gin.Context) {
 	// goi service
 	key, err := s.svc.CreateShortenLink(c, input.Url, input.Exp)
 	if err != nil {
+		log.Error().Err(err).Msg("Failed to create shorten link - Shorten endpoint")
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
 		return
 	}
 
 	// tra response
 	c.JSON(http.StatusOK, gin.H{"code": key, "message": "Shorten URL generated successfully!"})
+}
+
+// Redirect Forward the request to the original url
+// @Tags link
+// @Accept       application/json
+// @Produce      application/json
+// @Param        code path string true "Shorten link key"
+// @Success      302
+// @Router       /v1/links/redirect/{code} [get]
+func (s *shortenLink) Redirect(c *gin.Context) {
+	code := c.Param("code")
+	if code == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid code"})
+		return
+	}
+
+	url, err := s.svc.GetURLFromCode(c, code)
+
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to get URL from code - Redirect endpoint")
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+		return
+	}
+
+	c.Redirect(http.StatusMovedPermanently, url)
 }

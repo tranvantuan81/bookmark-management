@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/tranvantuan81/bookmark-management/internal/api"
 	"github.com/tranvantuan81/bookmark-management/internal/config"
+	"github.com/tranvantuan81/bookmark-management/pkg/logger"
 	"github.com/tranvantuan81/bookmark-management/pkg/redis"
 )
 
@@ -16,6 +17,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	logger.SetLogLevel(cfg.LogLevel)
 
 	redisClient, err := redis.NewClient("")
 	if err != nil {

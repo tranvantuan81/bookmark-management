@@ -3,9 +3,13 @@ definitions:
   handler.shortenLinkInput:
     properties:
       exp:
+        maximum: 604800
         type: integer
       url:
         type: string
+    required:
+    - exp
+    - url
     type: object
 info:
   contact: {}
@@ -49,6 +53,23 @@ paths:
       summary: Check health
       tags:
       - Health check
+  /v1/links/redirect/{code}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Shorten link key
+        in: path
+        name: code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "302":
+          description: Found
+      tags:
+      - link
   /v1/links/shorten:
     post:
       consumes:

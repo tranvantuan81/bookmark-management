@@ -10,6 +10,7 @@ type Config struct {
 	AppPort     string `default:"8080" envconfig:"APP_PORT"`
 	ServiceName string `default:"bookmark-management" envconfig:"SERVICE_NAME"`
 	InstanceID  string `default:"" envconfig:"INSTANCE_ID"`
+	LogLevel    string `default:"info" envconfig:"LOG_LEVEL"`
 }
 
 // NewConfig creates a new config

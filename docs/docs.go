@@ -70,6 +70,33 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/links/redirect/{code}": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "link"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Shorten link key",
+                        "name": "code",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "302": {
+                        "description": "Found"
+                    }
+                }
+            }
+        },
         "/v1/links/shorten": {
             "post": {
                 "description": "Generate shorten url based on original url that last upto 7 days",
@@ -111,9 +138,14 @@ const docTemplate = `{
     "definitions": {
         "handler.shortenLinkInput": {
             "type": "object",
+            "required": [
+                "exp",
+                "url"
+            ],
             "properties": {
                 "exp": {
-                    "type": "integer"
+                    "type": "integer",
+                    "maximum": 604800
                 },
                 "url": {
                     "type": "string"
