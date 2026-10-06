@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -18,7 +19,7 @@ var response = service.Response{
 	InstanceID:  "",
 }
 
-var testErr = "test error"
+var testErr = errors.New("something went wrong")
 
 func TestHealthCheckHandler_HealthCheck(t *testing.T) {
 	t.Parallel()

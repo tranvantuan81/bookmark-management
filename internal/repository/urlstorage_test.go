@@ -52,7 +52,7 @@ func TestUrlStorage_StoreURL(t *testing.T) {
 
 			testRepo := NewURLStorage(mock)
 			err := testRepo.StoreURL(ctx, "abcdef", "https://google.com", 0)
-			assert.ErrorIs(t, tc.expectedErr, err)
+			assert.ErrorIs(t, err, tc.expectedErr)
 
 			if tc.verifyFunc != nil {
 				tc.verifyFunc(ctx, mock)
@@ -88,6 +88,15 @@ func TestUrlStorage_GetURL(t *testing.T) {
 			},
 			expectedErr: ErrNotFound,
 		},
+		{
+			name: "connection error",
+			setupMock: func(ctx context.Context) *redis.Client {
+				testDB := redisPkg.InitMockRedis(t)
+				testDB.Close()
+				return testDB
+			},
+			expectedErr: redis.ErrClosed,
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -97,7 +106,7 @@ func TestUrlStorage_GetURL(t *testing.T) {
 
 			testRepo := NewURLStorage(mock)
 			url, err := testRepo.GetURL(ctx, "abcdef")
-			assert.ErrorIs(t, tc.expectedErr, err)
+			assert.ErrorIs(t, err, tc.expectedErr)
 			assert.Equal(t, tc.expectedUrl, url)
 		})
 	}

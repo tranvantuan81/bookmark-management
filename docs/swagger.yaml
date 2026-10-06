@@ -17,25 +17,6 @@ info:
   title: Bookmark Management API
   version: "1.0"
 paths:
-  /genpass:
-    get:
-      description: Generates a cryptographically secure random password of fixed length.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: message
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            type: string
-      summary: Generate random password
-      tags:
-      - password
   /health-check:
     get:
       consumes:

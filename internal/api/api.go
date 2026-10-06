@@ -57,7 +57,7 @@ func (e *engine) initRoutes() {
 	healthCheckHandler := handler.NewHealthCheck(healthCheckSev)
 
 	urlStorage := repository.NewURLStorage(e.redisClient)
-	urlService := service.NewShortenUrl(urlStorage)
+	urlService := service.NewShortenUrl(urlStorage, service.NewCodeGen())
 	urlHandler := handler.NewShortenLink(urlService)
 
 	e.app.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

@@ -15,35 +15,6 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/genpass": {
-            "get": {
-                "description": "Generates a cryptographically secure random password of fixed length.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "password"
-                ],
-                "summary": "Generate random password",
-                "responses": {
-                    "200": {
-                        "description": "message",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
         "/health-check": {
             "get": {
                 "description": "Check health for app",
