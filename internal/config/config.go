@@ -11,6 +11,7 @@ type Config struct {
 	ServiceName string `default:"bookmark-management" envconfig:"SERVICE_NAME"`
 	InstanceID  string `default:"" envconfig:"INSTANCE_ID"`
 	LogLevel    string `default:"info" envconfig:"LOG_LEVEL"`
+	BasePath    string `default:"localhost:8080" envconfig:"APP_BASEPATH"`
 }
 
 // NewConfig creates a new config

@@ -9,8 +9,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"github.com/tranvantuan81/bookmark-management/internal/service"
-	"github.com/tranvantuan81/bookmark-management/internal/service/mocks"
+	"github.com/tranvantuan81/bookmark-management/internal/app/service"
+	"github.com/tranvantuan81/bookmark-management/internal/app/service/mocks"
 )
 
 var response = service.Response{

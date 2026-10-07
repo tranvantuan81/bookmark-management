@@ -6,8 +6,8 @@ import (
 
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
+	"github.com/tranvantuan81/bookmark-management/internal/app/repository"
 	"github.com/tranvantuan81/bookmark-management/internal/config"
-	"github.com/tranvantuan81/bookmark-management/internal/repository"
 	redisPkg "github.com/tranvantuan81/bookmark-management/pkg/redis"
 )
 

@@ -8,7 +8,9 @@ services:
       - "6379:6379"
 
   bookmark_service:
-    image: bookmark_service:latest
+    image: bookmark_service:dev
+    build: .
+    restart: always
     container_name: bookmark_service
     depends_on:
       - redis

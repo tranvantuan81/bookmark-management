@@ -13,5 +13,6 @@ FROM alpine:3.23.2 AS run
 WORKDIR /app
 
 COPY --from=build /opt/app/main .
+COPY --from=build /opt/app/docs .
 
 CMD ["./main"]

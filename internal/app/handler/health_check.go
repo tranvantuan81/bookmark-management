@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/tranvantuan81/bookmark-management/internal/service"
+	"github.com/tranvantuan81/bookmark-management/internal/app/service"
 )
 
 // HealthCheck interface for health check handler

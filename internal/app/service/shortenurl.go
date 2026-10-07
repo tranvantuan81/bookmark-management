@@ -6,7 +6,7 @@ import (
 	"errors"
 	"math/big"
 
-	"github.com/tranvantuan81/bookmark-management/internal/repository"
+	"github.com/tranvantuan81/bookmark-management/internal/app/repository"
 )
 
 const DefaultCodeLength = 7

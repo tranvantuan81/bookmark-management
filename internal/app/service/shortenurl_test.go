@@ -6,10 +6,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/tranvantuan81/bookmark-management/internal/repository"
-	repoMocks "github.com/tranvantuan81/bookmark-management/internal/repository/mocks"
-	"github.com/tranvantuan81/bookmark-management/internal/service"
-	svcMocks "github.com/tranvantuan81/bookmark-management/internal/service/mocks"
+	"github.com/tranvantuan81/bookmark-management/internal/app/repository"
+	repoMocks "github.com/tranvantuan81/bookmark-management/internal/app/repository/mocks"
+	"github.com/tranvantuan81/bookmark-management/internal/app/service"
+	svcMocks "github.com/tranvantuan81/bookmark-management/internal/app/service/mocks"
 )
 
 var errSomething = errors.New("something went wrong")

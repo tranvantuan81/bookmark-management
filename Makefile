@@ -24,7 +24,6 @@ test:
 dev-run: swagger run
 
 docker-build:
-	docker build -t bookmark_service:latest .
-
+	docker build -t bookmark_service:dev .
 
 

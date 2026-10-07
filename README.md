@@ -167,7 +167,7 @@ Test conventions used throughout the repo:
 | Convention | Why |
 |---|---|
 | Black-box tests live in `package X_test` | they exercise the public API only, so refactoring internals cannot silently break them |
-| `internal/handler` keeps `package handler` | its tests need the unexported `passwordLength` constant |
+| `internal/app/handler` keeps `package handler` | its tests need the unexported `passwordLength` constant |
 | Table-driven tests with `name / setUpX / wantX` | one place to add a scenario, subtests run in parallel |
 | `require` stops the test, `assert` keeps going | use `require` for preconditions, `assert` for the checks that belong to the case |
 | `t.Context()` everywhere | context is created and cancelled by the test framework |
@@ -179,8 +179,8 @@ What the suite covers:
 
 | Layer | Approach |
 |---|---|
-| `internal/service`, `internal/handler` | table-driven unit tests with mockery mocks; every branch (success, dependency error, invalid input) has a case |
-| `internal/repository` | real Redis behaviour through `miniredis` |
+| `internal/app/service`, `internal/app/handler` | table-driven unit tests with mockery mocks; every branch (success, dependency error, invalid input) has a case |
+| `internal/app/repository` | real Redis behaviour through `miniredis` |
 | `internal/api` | route registration through `ServeHTTP` |
 | `internal/config`, `pkg/redis` | environment parsing, using `miniredis` as the server |
 | `internal/integration_test` | real engine + in-memory Redis, driving HTTP endpoints end to end, including what ends up in Redis and with which TTL |
@@ -221,7 +221,7 @@ A few decisions worth knowing before changing the code:
   they create `context.Background()`, which is one of the limitations listed below; the
   target is `c.Request.Context()` so cancellations and deadlines propagate.
 - **Tests are black-box by default.** Every package is tested from `package X_test` so that
-  only the exported API is relied upon; `internal/handler` is the exception because its tests
+  only the exported API is relied upon; `internal/app/handler` is the exception because its tests
   need the unexported `passwordLength`. This also avoids an import cycle: the generated
   `service/mocks` package imports `service`.
 
@@ -241,7 +241,7 @@ A few decisions worth knowing before changing the code:
 ## Contributing
 
 1. Branch off `main`.
-2. Keep layers separated — do not import Redis (or any other client) into `internal/service`.
+2. Keep layers separated — do not import Redis (or any other client) into `internal/app/service`.
 3. Add or update table-driven tests for every behaviour change.
 4. Run `make test` before opening a PR.
 

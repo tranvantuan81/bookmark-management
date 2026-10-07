@@ -5,7 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
-	"github.com/tranvantuan81/bookmark-management/internal/service"
+	"github.com/tranvantuan81/bookmark-management/internal/app/service"
+	"github.com/tranvantuan81/bookmark-management/pkg/response"
 )
 
 // ShortenLink interface for shorten link handler
@@ -48,7 +49,7 @@ func (s *shortenLink) CreateShortenLink(c *gin.Context) {
 	// lay input
 	input := shortenLinkInput{}
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, response.InputFieldError(err))
 		return
 	}
 
@@ -56,7 +57,7 @@ func (s *shortenLink) CreateShortenLink(c *gin.Context) {
 	key, err := s.svc.CreateShortenLink(c, input.Url, input.Exp)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to create shorten link - Shorten endpoint")
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response.InternalServerError)
 		return
 	}
 

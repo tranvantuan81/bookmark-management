@@ -10,7 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"github.com/tranvantuan81/bookmark-management/internal/service/mocks"
+	"github.com/tranvantuan81/bookmark-management/internal/app/service/mocks"
 )
 
 var ErrNotFound = errors.New("url not found")

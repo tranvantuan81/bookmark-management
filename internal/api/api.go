@@ -8,11 +8,12 @@ import (
 	"github.com/redis/go-redis/v9"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"github.com/tranvantuan81/bookmark-management/docs"
 	_ "github.com/tranvantuan81/bookmark-management/docs"
+	handler2 "github.com/tranvantuan81/bookmark-management/internal/app/handler"
+	repository2 "github.com/tranvantuan81/bookmark-management/internal/app/repository"
+	service2 "github.com/tranvantuan81/bookmark-management/internal/app/service"
 	"github.com/tranvantuan81/bookmark-management/internal/config"
-	"github.com/tranvantuan81/bookmark-management/internal/handler"
-	"github.com/tranvantuan81/bookmark-management/internal/repository"
-	"github.com/tranvantuan81/bookmark-management/internal/service"
 )
 
 // Engine is the interface for the application
@@ -52,14 +53,16 @@ func (e *engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 // initRoutes initializes the routes
 func (e *engine) initRoutes() {
 
-	healthCheckRepo := repository.NewPing(e.redisClient)
-	healthCheckSev := service.NewHealthCheck(e.cfg, healthCheckRepo)
-	healthCheckHandler := handler.NewHealthCheck(healthCheckSev)
+	healthCheckRepo := repository2.NewPing(e.redisClient)
+	healthCheckSev := service2.NewHealthCheck(e.cfg, healthCheckRepo)
+	healthCheckHandler := handler2.NewHealthCheck(healthCheckSev)
 
-	urlStorage := repository.NewURLStorage(e.redisClient)
-	urlService := service.NewShortenUrl(urlStorage, service.NewCodeGen())
-	urlHandler := handler.NewShortenLink(urlService)
+	urlStorage := repository2.NewURLStorage(e.redisClient)
+	urlService := service2.NewShortenUrl(urlStorage, service2.NewCodeGen())
+	urlHandler := handler2.NewShortenLink(urlService)
 
+	// Init swagger routes
+	docs.SwaggerInfo.BasePath = e.cfg.BasePath
 	e.app.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	e.app.GET("/health-check", healthCheckHandler.HealthCheck)
 	e.app.POST("/v1/links/shorten", urlHandler.CreateShortenLink)

@@ -3,8 +3,8 @@ package service
 import (
 	"context"
 
+	"github.com/tranvantuan81/bookmark-management/internal/app/repository"
 	"github.com/tranvantuan81/bookmark-management/internal/config"
-	"github.com/tranvantuan81/bookmark-management/internal/repository"
 )
 
 // CheckHealth interface for health check service
