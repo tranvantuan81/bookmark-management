@@ -24,6 +24,6 @@ test:
 dev-run: swagger run
 
 docker-build:
-	docker build -t bookmark_service:dev .
+	docker build --platform linux/amd64 -t bookmark_service:dev .
 
 
