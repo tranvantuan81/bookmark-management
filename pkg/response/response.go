@@ -8,7 +8,7 @@ import (
 
 type Message struct {
 	Message string `json:"message"`
-	Details any    `json:"detail,omitempty"`
+	Details any    `json:"details,omitempty"`
 }
 
 var (
@@ -23,13 +23,15 @@ var (
 )
 
 func InputFieldError(err error) Message {
-	if ok := errors.As(err, &validator.ValidationErrors{}); ok {
+	if ok := errors.As(err, &validator.ValidationErrors{}); !ok {
 		return InputErrResponse
 	}
+
 	var errs []string
 	for _, err := range err.(validator.ValidationErrors) {
 		errs = append(errs, err.Field()+" is invalid ("+err.Tag()+")")
 	}
+
 	return Message{
 		Message: "Input error",
 		Details: errs,

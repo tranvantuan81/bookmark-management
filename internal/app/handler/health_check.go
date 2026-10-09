@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/tranvantuan81/bookmark-management/internal/app/service"
+	"github.com/tranvantuan81/bookmark-management/pkg/response"
 )
 
 // HealthCheck interface for health check handler
@@ -34,7 +35,7 @@ func NewHealthCheck(healthCheckSvc service.HealthCheck) HealthCheck {
 func (s *healthCheckHandler) HealthCheck(c *gin.Context) {
 	res, err := s.healthCheckService.HealthCheck(c)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, response.InternalServerError)
 		return
 	}
 

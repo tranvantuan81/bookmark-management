@@ -60,7 +60,7 @@ func TestShortenLink_CreateShortenLink(t *testing.T) {
 				return serviceMock
 			},
 			expectedStatus:   http.StatusInternalServerError,
-			expectedResponse: `{"error":"Internal Server Error"}`,
+			expectedResponse: `{"message":"Internal Server Error"}`,
 		},
 		{
 			name: "fail case - bad input",
@@ -76,7 +76,7 @@ func TestShortenLink_CreateShortenLink(t *testing.T) {
 				return serviceMock
 			},
 			expectedStatus:   http.StatusBadRequest,
-			expectedResponse: `{"error":"Invalid input"}`,
+			expectedResponse: `{"message":"Input error"}`,
 		},
 		{
 			name: "fail case - url field is not a valid URL",
@@ -91,7 +91,7 @@ func TestShortenLink_CreateShortenLink(t *testing.T) {
 				return mocks.NewShortenUrl(t)
 			},
 			expectedStatus:   http.StatusBadRequest,
-			expectedResponse: `{"error":"Invalid input"}`,
+			expectedResponse: `{"message":"Input error","details":["Url is invalid (url)"]}`,
 		},
 		{
 			name: "fail case - exp exceeds max allowed value (604800)",
@@ -106,7 +106,7 @@ func TestShortenLink_CreateShortenLink(t *testing.T) {
 				return mocks.NewShortenUrl(t)
 			},
 			expectedStatus:   http.StatusBadRequest,
-			expectedResponse: `{"error":"Invalid input"}`,
+			expectedResponse: `{"message":"Input error","details":["Exp is invalid (lte)"]}`,
 		},
 		{
 			name: "fail case - missing exp field",
@@ -121,7 +121,7 @@ func TestShortenLink_CreateShortenLink(t *testing.T) {
 				return mocks.NewShortenUrl(t)
 			},
 			expectedStatus:   http.StatusBadRequest,
-			expectedResponse: `{"error":"Invalid input"}`,
+			expectedResponse: `{"message":"Input error","details":["Exp is invalid (required)"]}`,
 		},
 		{
 			name: "fail case - missing url field",
@@ -136,7 +136,7 @@ func TestShortenLink_CreateShortenLink(t *testing.T) {
 				return mocks.NewShortenUrl(t)
 			},
 			expectedStatus:   http.StatusBadRequest,
-			expectedResponse: `{"error":"Invalid input"}`,
+			expectedResponse: `{"message":"Input error","details":["Url is invalid (url)"]}`,
 		},
 		{
 			name: "fail case - empty request body",
@@ -151,7 +151,7 @@ func TestShortenLink_CreateShortenLink(t *testing.T) {
 				return mocks.NewShortenUrl(t)
 			},
 			expectedStatus:   http.StatusBadRequest,
-			expectedResponse: `{"error":"Invalid input"}`,
+			expectedResponse: `{"message":"Input error"}`,
 		},
 	}
 	for _, tc := range testCases {

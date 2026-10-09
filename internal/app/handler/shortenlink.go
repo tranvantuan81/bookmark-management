@@ -1,10 +1,12 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
+	"github.com/tranvantuan81/bookmark-management/internal/app/repository"
 	"github.com/tranvantuan81/bookmark-management/internal/app/service"
 	"github.com/tranvantuan81/bookmark-management/pkg/response"
 )
@@ -27,7 +29,7 @@ func NewShortenLink(svc service.ShortenUrl) ShortenLink {
 }
 
 type shortenLinkInput struct {
-	Url string `json:"url" binding:"required,url"`
+	Url string `json:"url" binding:"url"`
 	Exp int64  `json:"exp" binding:"required,lte=604800"`
 }
 
@@ -47,9 +49,9 @@ type shortenLinkRes struct {
 // @Router       /v1/links/shorten [post]
 func (s *shortenLink) CreateShortenLink(c *gin.Context) {
 	// lay input
-	input := shortenLinkInput{}
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, response.InputFieldError(err))
+	input := &shortenLinkInput{}
+	if err := c.ShouldBindJSON(input); err != nil {
+		c.JSON(http.StatusBadRequest, response.InputFieldError(err))
 		return
 	}
 
@@ -82,6 +84,10 @@ func (s *shortenLink) Redirect(c *gin.Context) {
 	url, err := s.svc.GetURLFromCode(c, code)
 
 	if err != nil {
+		if errors.Is(err, repository.ErrKeyNotFound) {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Code not found"})
+			return
+		}
 		log.Error().Err(err).Msg("Failed to get URL from code - Redirect endpoint")
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
 		return

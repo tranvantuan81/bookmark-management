@@ -9,7 +9,6 @@ definitions:
         type: string
     required:
     - exp
-    - url
     type: object
 info:
   contact: {}

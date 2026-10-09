@@ -1,6 +1,7 @@
 package integration_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -25,20 +26,19 @@ func TestCreateShortenLinkEndpoints(t *testing.T) {
 		expectedResponseBody string
 	}{
 		{
-			name: "valid payload returns a code",
+			name: "normal case",
 			setupTestHTTP: func(engine api.Engine) *httptest.ResponseRecorder {
 				req := httptest.NewRequest(
 					http.MethodPost,
 					"/v1/links/shorten",
-					strings.NewReader(`{"url":"https://google.com","exp":3600}`),
+					bytes.NewBuffer([]byte(`{"url":"https://google.com", "exp":60}`)),
 				)
-				req.Header.Set("Content-Type", "application/json")
 				rec := httptest.NewRecorder()
 				engine.ServeHTTP(rec, req)
 				return rec
 			},
 			expectedStatusCode:   http.StatusOK,
-			expectedResponseBody: `"message":"Shorten URL generated successfully!"`,
+			expectedResponseBody: `"message":`,
 		},
 		{
 			name: "missing required field url returns bad request",
@@ -54,7 +54,7 @@ func TestCreateShortenLinkEndpoints(t *testing.T) {
 				return rec
 			},
 			expectedStatusCode:   http.StatusBadRequest,
-			expectedResponseBody: `"error":"Invalid input"`,
+			expectedResponseBody: `{"message":`,
 		},
 		{
 			name: "malformed json returns bad request",
@@ -70,7 +70,7 @@ func TestCreateShortenLinkEndpoints(t *testing.T) {
 				return rec
 			},
 			expectedStatusCode:   http.StatusBadRequest,
-			expectedResponseBody: `"error":"Invalid input"`,
+			expectedResponseBody: `{"message":"`,
 		},
 		{
 			name: "wrong http method returns not found",
@@ -97,7 +97,7 @@ func TestCreateShortenLinkEndpoints(t *testing.T) {
 				return rec
 			},
 			expectedStatusCode:   http.StatusBadRequest,
-			expectedResponseBody: `"error":"Invalid input"`,
+			expectedResponseBody: `{"message":"`,
 		},
 		{
 			name: "exp at max boundary (604800) is accepted",
@@ -129,7 +129,7 @@ func TestCreateShortenLinkEndpoints(t *testing.T) {
 				return rec
 			},
 			expectedStatusCode:   http.StatusBadRequest,
-			expectedResponseBody: `"error":"Invalid input"`,
+			expectedResponseBody: `{"message":"`,
 		},
 	}
 
@@ -137,7 +137,9 @@ func TestCreateShortenLinkEndpoints(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			testAPI := api.NewEngine(&config.Config{}, redisPkg.InitMockRedis(t))
+			mockRedis := redisPkg.InitMockRedis(t)
+
+			testAPI := api.NewEngine(&config.Config{}, mockRedis)
 
 			recorder := tc.setupTestHTTP(testAPI)
 

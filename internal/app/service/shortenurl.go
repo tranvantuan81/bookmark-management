@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"errors"
+	"fmt"
 	"math/big"
 
 	"github.com/tranvantuan81/bookmark-management/internal/app/repository"
@@ -39,29 +40,36 @@ func NewShortenUrl(r repository.URLStorage, codeGen CodeGen) ShortenUrl {
 }
 
 // CreateShortenLink creates a new shorten link for the given URL
+
 func (s *shortenUrl) CreateShortenLink(ctx context.Context, url string, expTime int64) (string, error) {
-	// Generate code
-	code, err := s.codeGen.GenerateCode(DefaultCodeLength)
-	if err != nil {
-		return "", err
+	const maxAttempts = 5
+
+	for range maxAttempts {
+		code, err := s.codeGen.GenerateCode(DefaultCodeLength)
+		if err != nil {
+			return "", fmt.Errorf("generate short code: %w", err)
+		}
+
+		value, err := s.r.GetURL(ctx, code)
+		switch {
+		case errors.Is(err, repository.ErrNotFound):
+
+		case err != nil:
+			return "", fmt.Errorf("check short code: %w", err)
+
+		case value != "":
+			continue
+		}
+
+		err = s.r.StoreURL(ctx, code, url, expTime)
+		if err != nil {
+			return "", fmt.Errorf("store short URL: %w", err)
+		}
+
+		return code, nil
 	}
 
-	// Check code exists in storage
-	value, err := s.r.GetURL(ctx, code)
-	if err != nil && !errors.Is(err, repository.ErrNotFound) {
-		return "", err
-	}
-
-	if value != "" {
-		return s.CreateShortenLink(ctx, url, expTime)
-	}
-
-	err = s.r.StoreURL(ctx, code, url, expTime)
-	if err != nil {
-		return "", err
-	}
-
-	return code, nil
+	return "", errors.New("failed to generate unique short code")
 }
 
 // GetURLFromCode returns the original URL for the given code

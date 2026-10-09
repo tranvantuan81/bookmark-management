@@ -13,12 +13,6 @@ import (
 	"github.com/tranvantuan81/bookmark-management/internal/app/service/mocks"
 )
 
-var response = service.Response{
-	Message:     "OK",
-	ServiceName: "bookmark-management",
-	InstanceID:  "",
-}
-
 var testErr = errors.New("something went wrong")
 
 func TestHealthCheckHandler_HealthCheck(t *testing.T) {
@@ -39,7 +33,11 @@ func TestHealthCheckHandler_HealthCheck(t *testing.T) {
 			},
 			setupMockService: func(ctx context.Context) *mocks.HealthCheck {
 				serviceMock := mocks.NewHealthCheck(t)
-				serviceMock.On("HealthCheck", ctx).Return(response, nil)
+				serviceMock.On("HealthCheck", ctx).Return(service.Response{
+					Message:     "OK",
+					ServiceName: "bookmark-management",
+					InstanceID:  "",
+				}, nil)
 				return serviceMock
 			},
 			expectedStatus:   http.StatusOK,
@@ -57,7 +55,7 @@ func TestHealthCheckHandler_HealthCheck(t *testing.T) {
 				return serviceMock
 			},
 			expectedStatus:   http.StatusInternalServerError,
-			expectedResponse: `{"error":"Internal Server Error"}`,
+			expectedResponse: `{"message":"Internal Server Error"}`,
 		},
 	}
 	for _, tc := range testCases {
